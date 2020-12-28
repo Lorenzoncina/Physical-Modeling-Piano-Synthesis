@@ -88,73 +88,79 @@ radioButton{
   font-family: "Garamond";
 }
 
+
       </style>
   </head>
   <body>
     <script>
       midiNote;
       reverbType;
-      function sendData(htmlComponent,x,y){
-        htmlComponent.Data = JSON.stringify({ midi: x, reverbType: y });
+      function makeJson(midiNote){
+        //check del Riverbero
+        var ele = document.getElementsByName('riverbero');
+        for(i = 0; i < ele.length; i++) {
+             if(ele[i].checked){
+                reverbType = ele[i].value;
+              }
+         }
+        return JSON.stringify({ midi: midiNote, reverbType: reverbType });
       }
+      //function sendData(htmlComponent,x,y){
+      //  htmlComponent.Data = JSON.stringify({ midi: x, reverbType: y });
+      //}
       function setup(htmlComponent) {
         document.getElementById("c").addEventListener("click", function(event) {
-          htmlComponent.Data = 61;
-          /*
-          //htmlComponent.Data = JSON.stringify({ midi: 60, y: 393939 });
           midiNote = "60";
-          //check del Riverbero
-
-          var ele = document.getElementsByName('riverbero');
-          for(i = 0; i < ele.length; i++) {
-               if(ele[i].checked){
-                  reverbType = ele[i].value;
-                }
-           }
-
-          //sendData(htmlComponent, midiNote, reverbType);
-          htmlComponent.Data = JSON.stringify({ midi: midiNote, reverbType: reverbType });
-          */
+          htmlComponent.Data = makeJson(midiNote);
         });
         document.getElementById("cs").addEventListener("click", function(event) {
-          htmlComponent.Data = 61;
+          midiNote = "61";
+          htmlComponent.Data = makeJson(midiNote);
         });
         document.getElementById("d").addEventListener("click", function(event) {
-          htmlComponent.Data = 62;
+          midiNote= "62";
+          htmlComponent.Data = makeJson(midiNote);
         });
         document.getElementById("ds").addEventListener("click", function(event) {
-          htmlComponent.Data = 63;
+          midiNote = "63";
+          htmlComponent.Data = makeJson(midiNote);
         });
         document.getElementById("e").addEventListener("click", function(event) {
-          htmlComponent.Data = 64;
+          midiNote = "64";
+          htmlComponent.Data = makeJson(midiNote);
         });
         document.getElementById("f").addEventListener("click", function(event) {
-          htmlComponent.Data = 65;
+          midiNote = "65";
+          htmlComponent.Data = makeJson(midiNote);
         });
         document.getElementById("fs").addEventListener("click", function(event) {
-          htmlComponent.Data = 66;
+         midiNote = "66";
+          htmlComponent.Data = makeJson(midiNote);
         });
         document.getElementById("g").addEventListener("click", function(event) {
-          htmlComponent.Data = 67;
+          midiNote = "67";
+          htmlComponent.Data = makeJson(midiNote);
         });
         document.getElementById("gs").addEventListener("click", function(event) {
-          htmlComponent.Data = 68;
+          midiNote = "68";
+          htmlComponent.Data = makeJson(midiNote);
         });
         document.getElementById("a").addEventListener("click", function(event) {
-          htmlComponent.Data = 69;
+          midiNote = "69";
+          htmlComponent.Data = makeJson(midiNote);
         });
         document.getElementById("as").addEventListener("click", function(event) {
-          htmlComponent.Data = 70;
+          midiNote = "70";
+          htmlComponent.Data = makeJson(midiNote);
         });
         document.getElementById("b").addEventListener("click", function(event) {
-          htmlComponent.Data = 71;
+          midiNote = "71";
+          htmlComponent.Data = makeJson(midiNote);
         });
       }
     </script>
 
     <ul class="set">
-
-
        <li class="white c" id="c"></li>
        <li class="black cs" id="cs"></li>
        <li class="white d" id="d"></li>
@@ -171,11 +177,11 @@ radioButton{
        <input type="radio" id="noReverb" name="riverbero" value="No riverbero" checked>
        <label class="myLabel">No riverbero</label><br>
        <input type="radio" id="reverb1" name="riverbero" value="Riverbero 1">
-       <label class="myLabel">Riverbero 1</label><br>
+       <label class="myLabel">Sala Conferenze</label><br>
        <input type="radio" id="reverb2" name="riverbero" value="Riverbero 2">
-       <label class="myLabel">Riverbero 2</label><br>
+       <label class="myLabel">Scala</label><br>
        <input type="radio" id="reverb3" name="riverbero" value="Riverbero 3">
-       <label class="myLabel">Riverbero 3</label><br>
+       <label class="myLabel">Ufficio</label><br>
     </ul>
   </body>
 </html>

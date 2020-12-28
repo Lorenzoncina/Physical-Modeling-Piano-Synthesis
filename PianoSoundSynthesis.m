@@ -1,8 +1,25 @@
 
-function output=PianoSoundSynthesis(f0)
-
+% 1) This is a function that synthesizes the sound of a piano. It takes the
+% frequency of the note to be modeled as an input and returns the signal
+% of the synthesized note as an output. The function will also play the
+% sound once.
+% 2) The code is divided into two parts, the first part will model the
+% force signal of the piano hammer and the second part will model the
+% piano string. Extra notes regarding each part will be included at the
+% beginning of each section.
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+function output=PianoSoundSynthesis(f0,reverbType)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % PART I: PIANO HAMMER MODEL
-
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% 1) As detailed in the report, the model is defaulted to simulate the
+% force of the hammer strike for a C4 string with the initial velocity
+% of 4 m/s.
+% 2) The parameters of the hammer can be changed according to the measured
+% values (if available). Otherwise the same force signal will be used to
+% simulate ALL the notes.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 Fs=44100; % Sampling frequency
 N=65; % Number of spatial grid points
 L=0.62; % Length of the piano wire
@@ -98,12 +115,23 @@ end
 % waveguide model.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 v=F/(2*R0);
-
-
-
-
-% PART 2: PIANO STRING MODEL
-
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% PART I: PIANO STRING MODEL
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% 1) For easier reference the variables used will be listed here:
+%
+% al Loss Filter coefficient
+% gl Loss Filter gain
+% ad Dispersion Filter coefficient
+% ap_num Number of allpass filters used in the Dispersion Filter
+% offtune Variation in the Tuning Filter to make sure the three
+% waveguides have different frequency
+% N Length of the entire delay line of the waveguide model
+% M Length of the two parallel delay lines
+% P Difference between the exact delay line length reqruied and
+% the actual length implemented
+% C The Tuning Filter coefficient
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%
 % Initialize the output %
 %%%%%%%%%%%%%%%%%%%%%%%%%
@@ -113,7 +141,7 @@ output=zeros(1,output_length);
 % Convolves the input signal with the recorded response of the piano boday
 % being knocked.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-ir=audioread('IR.wav');
+ir=audioread('Piano_IR.wav');
 v_new=conv(v,ir);
 v_in=[v_new' zeros(1,length(output)-length(v_new))];
 
@@ -220,6 +248,9 @@ end
 H1=Hl*Hd^ap_num*Hfd1;
 H2=Hl*Hd^ap_num*Hfd2;
 H3=Hl*Hd^ap_num*Hfd3;
+
+
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % The filters are then combined according to the digital waveguide model of
 % the piano string.
@@ -243,5 +274,80 @@ output3=filter(b,a,v_in);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 output=output1+output2+output3;
 output=output/max(abs(output))*(1 - 1/32768);
-soundsc(output,Fs)
+%soundsc(output,Fs)
+
+
+
+%%%REVERB CHOICE
+switch reverbType
+    case 'No riverbero'
+        soundsc(output,Fs);
+    case 'Riverbero 1'
+        %aula conferenze (lecture)
+        airpar.rir_type = 1;
+        airpar.room = 4;
+        airpar.fs = Fs;
+        airpar.channel = 1;
+        airpar.head = 1;
+        airpar.rir_no = 6;
+       
+        [h_air,air_info] = load_air(airpar);
+        
+        %implemento convoluzione (implementare funzione da richiare)
+        reverbOutput = conv(output, h_air);
+        soundsc(reverbOutput,Fs)
+    case 'Riverbero 2'
+        %stairway
+        airpar.rir_type = 1;
+        airpar.fs = Fs;
+        airpar.room = 5;
+        airpar.channel = 1;
+        airpar.rir_no = 2;
+        airpar.azimuth = 15;
+        airpar.head = 1;
+        [h_air,air_info] = load_air(airpar);
+        
+        reverbOutput = conv(output, h_air);
+        soundsc(reverbOutput,Fs)
+    case 'Riverbero 3'
+        airpar.rir_type = 1;
+        airpar.fs = Fs;
+        airpar.room = 2; %stanza ufficio
+        airpar.channel = 1;
+        airpar.rir_no = 2;
+        airpar.head = 1;
+        [h_air,air_info] = load_air(airpar);
+        
+        reverbOutput = conv(output, h_air);
+        soundsc(reverbOutput,Fs)
+
+end
+
+
+%%%%%%%%%% reverb
+% airpar.rir_type = 1;
+% airpar.room = 4;
+% airpar.fs = Fs;
+% airpar.channel = 1;
+% airpar.head = 1;
+% airpar.rir_no = 5;
+% [h_air,air_info] = load_air(airpar);
+% 
+% reverbOutput = conv(output, h_air);
+% soundsc(reverbOutput,Fs)
+
+% %Plot the string's movement
+% if(enablePlot)
+% %     ii = 0:(M-1);
+% %     for t = 1:output_length
+% %         plot(ii, output);
+% %     end
+%     figure();
+%     subplot(2,1,1);
+%     plot(output);
+%       
+% end
+
+
+
 
