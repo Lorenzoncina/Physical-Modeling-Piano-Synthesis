@@ -282,6 +282,7 @@ output=output/max(abs(output))*(1 - 1/32768);
 switch reverbType
     case 'No riverbero'
         soundsc(output,Fs);
+        %audiowrite('./output.wav', output, Fs)
     case 'Riverbero 1'
         %aula conferenze (lecture)
         airpar.rir_type = 1;
@@ -293,8 +294,10 @@ switch reverbType
        
         [h_air,air_info] = load_air(airpar);
         
-        %implemento convoluzione (implementare funzione da richiare)
-        reverbOutput = conv(output, h_air);
+        %implemento convoluzione (implementare funzione da richiare) 
+        %funzione riverberazione
+        %reverbOutput = conv(output, h_air);
+        reverbOutput = reverb(output, h_air,Fs, f0);
         soundsc(reverbOutput,Fs)
     case 'Riverbero 2'
         %stairway
@@ -307,7 +310,7 @@ switch reverbType
         airpar.head = 1;
         [h_air,air_info] = load_air(airpar);
         
-        reverbOutput = conv(output, h_air);
+        reverbOutput = reverb(output, h_air,Fs, f0);
         soundsc(reverbOutput,Fs)
     case 'Riverbero 3'
         airpar.rir_type = 1;
@@ -318,7 +321,7 @@ switch reverbType
         airpar.head = 1;
         [h_air,air_info] = load_air(airpar);
         
-        reverbOutput = conv(output, h_air);
+        reverbOutput = reverb(output, h_air,Fs, f0);
         soundsc(reverbOutput,Fs)
 
 end

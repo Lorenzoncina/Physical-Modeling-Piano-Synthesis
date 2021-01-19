@@ -1,69 +1,37 @@
 function outputArg1 = reverb(input_signal,impulse_response, Fs, f0)
 
 % shape factor parameter (window-related)
-L = 4;
+ shapeFact= 2;
 
-% length of the analysis window
-M = ceil(L * Fs / f0);
+% length of the analysis window (block)
+L = ceil(shapeFact * Fs / f0);
 
-% analysis window
-win = hamming(M);
+Lconv = L + length(impulse_response) - 1;
 
-% analysis hop size
-R = round((M-1)/2);
+% how many non-overlapping blocks of length L are there in input_signal? 
+num_blocks = ceil(length(input_signal) / L);
 
-%JND just noticeable difference
-if(f0<600)
-    JND = 3;
+if length(input_signal) < num_blocks * L
+    % pad x with zeros 
+    x_pad = padarray(input_signal, [0, num_blocks*L - length(input_signal)], 'post');
 else
-    JND = (f0 / 100)*0.5;
+    x_pad = input_signal;
 end
 
-% minimum fft length to be under JND 
-min_fft_length = Fs / (2 * JND);
-N_fft = 2^(ceil(log2(min_fft_length)));
+y_oa = zeros(1, Lconv*num_blocks);
 
-%number of frames
-n_frames = floor(((length(input_signal) - N_fft)/R))+1;
+reverb = fft([impulse_response, zeros(1, Lconv- length(impulse_response))]);
 
-%length of a convolved block
-Lconv = M + length(impulse_response) - 1;
-
-%zero padding ir
-%number_of_zeros = N_fft-M;
-% ir = [impulse_response zeros(1,number_of_zeros)];
-%padarray(impulse_response, [0, number_of_zeros], 'post');
-%transfer function
-H=fft(impulse_response,N_fft);
-
-%Nyquist frequency
-N_nyq = N_fft/2;
-
-%reverbered signal
-y_oa = zeros(1, Lconv * n_frames);
-
-for m = 0:n_frames-1
-% signal windowing 
-    x_m = input_signal(m*R + 1:m*R + M);
-    y_m = win.*x_m;
+for b = 1:num_blocks
     
-    %zero padding
-    %y_pad = [y_m zeros(1,number_of_zeros)];
-    %padarray(y_m, [0, number_of_zeros], 'post');
-    % compute the FFT
-    X = fft(y_m, N_fft);
-    %plot(X);
-    % retain only the positive frequencies up to the Nyquist index
-    %X = X(1:N_nyq);
-    disp(size(X));
-    disp(size(H));
-    y_block = ifft(X' .* H);
+    block_f = fft([x_pad(1 + (b-1)*(L):(b-1)*L + L), zeros(1, Lconv-L)]);
     
-    %overlapp and add method
-    y_oa(1 + m *(M):m * M + Lconv) = y_oa(1 + m *(M): m * M + Lconv) + y_block;  
+    y_block = ifft(block_f .* reverb);
+    y_oa(1 + (b-1)*(L):(b-1)*L + Lconv) = y_oa(1 + (b-1)*(L):(b-1)*L + Lconv) + y_block;   
     
 end
 
+y_oa = y_oa(1:length(input_signal) + length(impulse_response) -1);
 outputArg1=y_oa;
 
 end
