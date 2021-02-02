@@ -1,125 +1,105 @@
 
-% 1) This is a function that synthesizes the sound of a piano. It takes the
-% frequency of the note to be modeled as an input and returns the signal
-% of the synthesized note as an output. The function will also play the
-% sound once.
-% 2) The code is divided into two parts, the first part will model the
-% force signal of the piano hammer and the second part will model the
-% piano string. Extra notes regarding each part will be included at the
-% beginning of each section.
-%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 function output=PianoSoundSynthesis(f0,reverbType)
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% PART I: PIANO HAMMER MODEL
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% 1) As detailed in the report, the model is defaulted to simulate the
-% force of the hammer strike for a C4 string with the initial velocity
-% of 4 m/s.
-% 2) The parameters of the hammer can be changed according to the measured
-% values (if available). Otherwise the same force signal will be used to
-% simulate ALL the notes.
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%PIANO HAMMER MODEL
+
 Fs=44100; % Sampling frequency
 N=65; % Number of spatial grid points
-L=0.62; % Length of the piano wire
-Ms=3.93/1000; % Mass of the piano wire
-Mh=2.97/1000; % Mass of the hammer
+Lenght=0.62; % Length of the piano wire
+MassString=3.93/1000; % Mass of the piano wire
+MassHammer=2.97/1000; % Mass of the hammer
 K=4.5*10^9; % Hammer stiffness coefficient
-T=670; % Tension in the piano wire
+Tension=670; % Tension in the piano wire
 p=2.5; % Stiffness non-linear component
 alpha=0.12; % Relative striking position
 b1=0.5; % Damping coefficient
 b3=6.25*10^-9; % Damping coefficient
 epsilon=3.82*10^-5; % String stiffness parameter
 v=4; % Initial hammer velocity
-R0=sqrt(T*Ms/L); % Wave impedance of the piano wire
+R0=sqrt(Tension*MassString/Lenght); % Wave impedance of the piano wire
 i0=round(alpha*N); % Striking position of the hammer
-c=sqrt(T/(Ms/L)); % Wave speed
+c=sqrt(Tension/(MassString/Lenght)); % Wave speed
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Defining the coefficients of the wave equation %
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Defining the coefficients of the wave equation 
+
 D=1+b1/Fs+2*b3*Fs;
-r=c*N/(Fs*L);
+r=c*N/(Fs*Lenght);
 a1=( 2 - 2*r^2 + b3*Fs - 6*epsilon*N^2*r^2 )/D;
 a2=( -1 + b1/Fs + 2*b3*Fs )/D;
 a3=( r^2*( 1 + 4*epsilon*N^2 ) )/D;
 a4=( b3*Fs - epsilon*N^2*r^2 )/D;
 a5=( -b3*Fs )/D;
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 % Initializing some variables %
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 input_length=150;       %istanti temporali discreti
-y=zeros(N,input_length); % Displacement of the string
+ys=zeros(N,input_length); % Displacement of the string
 yh=zeros(1,input_length); % Displacement of the hammer
-F=zeros(1,input_length); % Force signal output
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+F_out=zeros(1,input_length); % Force signal output
+
 % Initializing the values for the first few time steps of the simulation %
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-y(:,1)=0;
+
+ys(:,1)=0;
 %F(1) = 0, yh(1)=0 (forza e displ del martello 0 al primo istante temporale
 
 %1° step (paper)
 yh(2)=v/Fs;
-y(1,2)=0;   %corda fissa agli estremmi
-y(N,2)=0;
-y(2:N-1,2)=(y(3:N,1)+y(1:N-2,1))/2; %primo step della corda con taylor
-F(2)=K*abs(yh(2)-y(i0,2))^p;
+ys(1,2)=0;   %corda fissa agli estremmi
+ys(N,2)=0;
+ys(2:N-1,2)=(ys(3:N,1)+ys(1:N-2,1))/2; %primo step della corda con taylor
+F_out(2)=K*abs(yh(2)-ys(i0,2))^p;
 
 %2° step (paper)
-y(1,3)=0;       %corda fissa agli estremi
-y(N,3)=0;
-y(2:N-1,3)=y(3:N,2)+y(1:N-2,2)-y(2:N-1,1);
-y(i0,3)=y(i0+1,2)+y(i0-1,2)-y(i0,1)+((1/Fs)^2*N*F(2))/Ms;
-yh(3)=2*yh(2)-yh(1)-((1/Fs)^2*F(2))/Mh;
-F(3)=K*abs(yh(3)-y(i0,3))^p;
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+ys(1,3)=0;       %corda fissa agli estremi
+ys(N,3)=0;
+ys(2:N-1,3)=ys(3:N,2)+ys(1:N-2,2)-ys(2:N-1,1);
+ys(i0,3)=ys(i0+1,2)+ys(i0-1,2)-ys(i0,1)+((1/Fs)^2*N*F_out(2))/MassString;
+yh(3)=2*yh(2)-yh(1)-((1/Fs)^2*F_out(2))/MassHammer;
+F_out(3)=K*abs(yh(3)-ys(i0,3))^p;
+
 % Loop through the remaining time steps, implementing the finite difference
 % hammer and string model.
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 for n=4:input_length
- y(1,n)=0;      %estremi fissi
- y(N,n)=0;
- y(2,n)= a1*y(2,n-1)+a2*y(2,n-2)+...
- a3*(y(3,n-1)+y(1,n-1))+...
- a4*(y(4,n-1)-y(2,n-1))+...
- a5*(y(3,n-2)+y(1,n-2)+y(2,n-3));
- y(N-1,n)= a1*y(N-1,n-1)+a2*y(N-1,n-2)+...
- a3*(y(N,n-1)+y(N-2,n-1))+...
- a4*(y(N-3,n-1)-y(N-1,n-1))+...
- a5*(y(N,n-2)+y(N-2,n-2)+y(N-1,n-3));
- y(3:N-2,n)= a1*y(3:N-2,n-1)+a2*y(3:N-2,n-2)+...
- a3*(y(4:N-1,n-1)+y(2:N-3,n-1))+...
- a4*(y(5:N,n-1)+y(1:N-4,n-1))+...
- a5*(y(4:N-1,n-2)+y(2:N-3,n-2)+y(3:N-2,n-3));
+ ys(1,n)=0;      %estremi fissi
+ ys(N,n)=0;
+ ys(2,n)= a1*ys(2,n-1)+a2*ys(2,n-2)+...
+ a3*(ys(3,n-1)+ys(1,n-1))+...
+ a4*(ys(4,n-1)-ys(2,n-1))+...
+ a5*(ys(3,n-2)+ys(1,n-2)+ys(2,n-3));
+ ys(N-1,n)= a1*ys(N-1,n-1)+a2*ys(N-1,n-2)+...
+ a3*(ys(N,n-1)+ys(N-2,n-1))+...
+ a4*(ys(N-3,n-1)-ys(N-1,n-1))+...
+ a5*(ys(N,n-2)+ys(N-2,n-2)+ys(N-1,n-3));
+ ys(3:N-2,n)= a1*ys(3:N-2,n-1)+a2*ys(3:N-2,n-2)+...
+ a3*(ys(4:N-1,n-1)+ys(2:N-3,n-1))+...
+ a4*(ys(5:N,n-1)+ys(1:N-4,n-1))+...
+ a5*(ys(4:N-1,n-2)+ys(2:N-3,n-2)+ys(3:N-2,n-3));
 
- y(i0,n)= a1*y(i0,n-1)+a2*y(i0,n-2)+...
- a3*(y(i0+1,n-1)+y(i0-1,n-1))+...
- a4*(y(i0+2,n-1)+y(i0-2,n-1))+...
- a5*(y(i0+1,n-2)+y(i0-1,n-2)+y(i0,n-3))+...
- ((1/Fs)^2*N*F(n-1))/Ms;
+ ys(i0,n)= a1*ys(i0,n-1)+a2*ys(i0,n-2)+...
+ a3*(ys(i0+1,n-1)+ys(i0-1,n-1))+...
+ a4*(ys(i0+2,n-1)+ys(i0-2,n-1))+...
+ a5*(ys(i0+1,n-2)+ys(i0-1,n-2)+ys(i0,n-3))+...
+ ((1/Fs)^2*N*F_out(n-1))/MassString;
 
- yh(n)=2*yh(n-1)-yh(n-2)-((1/Fs)^2*F(n-1))/Mh;
- %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
- % Check for when the hammer is no longer in contact with the string %
- %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
- if (yh(n)-y(i0,n))>0
- F(n)=K*abs(yh(n)-y(i0,n))^p;
+ yh(n)=2*yh(n-1)-yh(n-2)-((1/Fs)^2*F_out(n-1))/MassHammer;
+
+ % Check for when the hammer is no longer in contact with the string 
+
+ if (yh(n)-ys(i0,n))>0
+ F_out(n)=K*abs(yh(n)-ys(i0,n))^p;
  else
- F(n)=0;
+ F_out(n)=0;
  end
 end
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 % Changes the force signal into a veolcity to be fed into the digital
 % waveguide model.
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-v=F/(2*R0);
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% PART I: PIANO STRING MODEL
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% 1) For easier reference the variables used will be listed here:
-%
+
+v=F_out/(2*R0);
+
+%PIANO STRING MODEL
+
 % al Loss Filter coefficient
 % gl Loss Filter gain
 % ad Dispersion Filter coefficient
@@ -131,27 +111,26 @@ v=F/(2*R0);
 % P Difference between the exact delay line length reqruied and
 % the actual length implemented
 % C The Tuning Filter coefficient
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%
+
 % Initialize the output %
-%%%%%%%%%%%%%%%%%%%%%%%%%
+
 output_length=100000;
 output=zeros(1,output_length);
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 % Convolves the input signal with the recorded response of the piano boday
 % being knocked.
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 ir=audioread('Piano_IR.wav');
 v_new=conv(v,ir);
 v_in=[v_new' zeros(1,length(output)-length(v_new))];
 
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 % Define/Calculate some of the parameters that will be used.
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 % The parameters of the filter are changed according to frequency to give a
 % more consistent and normalized output.
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 if f0>3000
  gl=-0.997;
  ap_num=0;
@@ -211,7 +190,7 @@ P=N_exact-2*M;
 C=(1-P)/(1+P);
 i0=round(alpha*M);
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 % Defines the transfer function for the delays and filters used:
 %
 % DL1 The delay line representing the segment of the string from the
@@ -228,7 +207,7 @@ i0=round(alpha*M);
 % digital waveguide models. They are made up of the Loss Filter,
 % the Dipersion Filter and the Tuning Filter.
 %
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 z=tf('z',1/Fs);
 DL1=(z)^-(M-i0);
 DL2=(z)^-(i0);
@@ -251,16 +230,16 @@ H3=Hl*Hd^ap_num*Hfd3;
 
 
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 % The filters are then combined according to the digital waveguide model of
 % the piano string.
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 DW1=DL1/(1+H1*DL1*DL1*DL2*DL2)+DL2*DL2*DL1*(-1)/(1+H1*DL1*DL1*DL2*DL2);
 DW2=DL1/(1+H2*DL1*DL1*DL2*DL2)+DL2*DL2*DL1*(-1)/(1+H2*DL1*DL1*DL2*DL2);
 DW3=DL1/(1+H3*DL1*DL1*DL2*DL2)+DL2*DL2*DL1*(-1)/(1+H3*DL1*DL1*DL2*DL2);
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 % The Digital Waveguide filter is then used on the input velocity.
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 [b,a]=tfdata(DW1,'v');
 output1=filter(b,a,v_in);
 [b,a]=tfdata(DW2,'v');
@@ -268,10 +247,10 @@ output2=filter(b,a,v_in);
 [b,a]=tfdata(DW3,'v');
 output3=filter(b,a,v_in);
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 % Output of the three digital waveguides re summed together. The sum is
 % then normalized. The final output is then played.
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 output=output1+output2+output3;
 output=output/max(abs(output))*(1 - 1/32768);
 %soundsc(output,Fs)
@@ -324,6 +303,13 @@ switch reverbType
         reverbOutput = reverb(output, h_air,Fs, f0);
         soundsc(reverbOutput,Fs)
 
+end
+
+%visualizza o meno il plot della stringa
+plot = false;
+
+if plot
+    stringPlot(M,output_length, [-.1 -.25 -.1] , alpha );
 end
 
 
