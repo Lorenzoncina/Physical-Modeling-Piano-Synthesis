@@ -120,7 +120,7 @@ output=zeros(1,output_length);
 % Convolves the input signal with the recorded response of the piano boday
 % being knocked.
 
-ir=audioread('Piano_IR.wav');
+ir=audioread('AudioFile_IR\Piano_IR.wav');
 v_new=conv(v,ir);
 v_in=[v_new' zeros(1,length(output)-length(v_new))];
 
