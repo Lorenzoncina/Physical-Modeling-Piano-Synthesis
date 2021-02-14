@@ -3,9 +3,9 @@
 The goal of this project is the development of a virtual piano via matlab.
 The approach used is that of physical modeling, that is, the study of interactions that generate a certain sound in the real world.
 The sound is obtained by a simulation consisting of three steps, aimed at replicating the mechanics of a real piano:
--hammer-string interaction
--model of the string
--amplification of the oscillation via soundboard
+*hammer-string interaction
+*model of the string
+*amplification of the oscillation via soundboard
 
 The first phase was implemented using the Finite Differences technique, i.e. discretizing the equations that shape this interaction proposed in askenfelt research, 1990.
 The second part of the model implements wave propagation in a piano string using the waveguides technique.  The differential equation describing this phenomenon takes into account dispersion and rigidity of the string (Bensa, 2003).
