@@ -12,3 +12,8 @@ The second part of the model implements wave propagation in a piano string using
 The propagation of vibration propagating in the soundboard has been approximated here with a convolution between the signal produced at the previous steps and the response to the pulse of a properly recorded grand piano. The latter does not reflect the physical behaviour of the instrument but allows to simplify the model and obtain a piano sound very similar to the real one, but at the expense of a greater demand for resources.
 
 In order to make the sound more realistic, reverberation has also been implemented, allowing the user to choose between three different reverberating environments to shape the sound produced by the previous model.
+
+
+<p align="center">
+<img src="" alt="keyboard" width="1200"/>
+</p>
