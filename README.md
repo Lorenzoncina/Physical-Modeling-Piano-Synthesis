@@ -15,5 +15,5 @@ In order to make the sound more realistic, reverberation has also been implement
 
 
 <p align="center">
-<img src="Images/Gui Piano.PNG" alt="keyboard" width="1200"/>
+<img src="Images/Gui Piano.PNG" alt="Gui" width="100"/>
 </p>
