@@ -292,9 +292,10 @@ switch reverbType
         reverbOutput = reverb(output, h_air,Fs, f0);
         soundsc(reverbOutput,Fs)
     case 'Riverbero 3'
+        %office
         airpar.rir_type = 1;
         airpar.fs = Fs;
-        airpar.room = 2; %stanza ufficio
+        airpar.room = 2; 
         airpar.channel = 1;
         airpar.rir_no = 2;
         airpar.head = 1;
