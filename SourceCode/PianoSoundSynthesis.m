@@ -32,7 +32,7 @@ a5=( -b3*Fs )/D;
 
 % Initializing some variables %
 
-input_length=150;       %istanti temporali discreti
+input_length=150;       %Discretized time instants
 ys=zeros(N,input_length); % Displacement of the string
 yh=zeros(1,input_length); % Displacement of the hammer
 F_out=zeros(1,input_length); % Force signal output
@@ -44,7 +44,7 @@ ys(:,1)=0;
 
 %1° step (paper)
 yh(2)=v/Fs;
-ys(1,2)=0;   %corda fissa agli estremmi
+ys(1,2)=0;   %fixed string
 ys(N,2)=0;
 ys(2:N-1,2)=(ys(3:N,1)+ys(1:N-2,1))/2; %primo step della corda con taylor
 F_out(2)=K*abs(yh(2)-ys(i0,2))^p;
@@ -182,7 +182,7 @@ else
 end
 al=-0.001;
 ad=-0.30;
-%lunghrzza esatta della delay line
+%lunghezza esatta della delay line
 N_exact=((2*pi+ap_num*atan(((ad^2-1)*sin(2*pi*f0/Fs))/...
      (2*ad+(ad^2+1)*cos(2*pi*f0/Fs))))/(2*pi*f0/Fs));
 M=floor(N_exact/2);
